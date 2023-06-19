@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ShopOnline.Api.Extensions;
 using ShopOnline.Api.Repositories.Contracts;
 using ShopOnline.Models.Dtos;
 
@@ -29,15 +30,14 @@ namespace ShopOnline.Api.Controllers
                 }
                 else
                 {
-
+                    var productDto = products.ConvertToDto(productCategories);
+                    return Ok(productDto);
                 }
             }
             catch (Exception)
             {
-
-                throw;
+                return BadRequest();
             }
-            return 0;
         }
     }
 }

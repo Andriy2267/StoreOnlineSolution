@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using ShopOnline.Api.Data;
 using ShopOnline.Api.Repositories.Contracts;
 using ShopOnline.Api.Repositories;
+using Microsoft.Net.Http.Headers;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -23,6 +25,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors(policy =>
+    policy.WithOrigins("http://localhost:7225", "https://localhost:7225")
+    .AllowAnyMethod()
+    .WithHeaders(HeaderNames.ContentType)
+);
 
 app.UseHttpsRedirection();
 
