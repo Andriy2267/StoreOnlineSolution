@@ -39,5 +39,28 @@ namespace ShopOnline.Api.Controllers
                 return BadRequest();
             }
         }
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<ProductDto>> GetItem(int id)
+        {
+            try
+            {
+                var product = await _productRepository.GetProduct(id);
+
+                if(product == null)
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    var productCategory = await _productRepository.GetProductCategory(product.CategoryId);
+                    var productDto = product.ConvertToDto(productCategory);
+                    return Ok(productDto);
+                }
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
     }
 }

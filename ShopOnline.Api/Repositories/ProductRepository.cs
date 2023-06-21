@@ -12,9 +12,10 @@ namespace ShopOnline.Api.Repositories
         {
             this._context = context;
         }
-        public Task<Product> GetProduct(int id)
+        public async Task<Product> GetProduct(int id)
         {
-            throw new NotImplementedException();
+            var product = await _context.Products.FindAsync(id);
+            return product;
         }
 
         public async Task<IEnumerable<ProductCategory>> GetProductCategories()
@@ -23,9 +24,10 @@ namespace ShopOnline.Api.Repositories
             return productCategories;
         }
 
-        public Task<ProductCategory> GetProductCategory(int id)
+        public async Task<ProductCategory> GetProductCategory(int id)
         {
-            throw new NotImplementedException();
+            var productCategory = await _context.ProductCategories.SingleOrDefaultAsync(pg => pg.Id == id);
+            return productCategory;
         }
 
         public async Task<IEnumerable<Product>> GetProducts()
