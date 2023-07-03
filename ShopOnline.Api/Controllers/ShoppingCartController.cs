@@ -10,43 +10,45 @@ namespace ShopOnline.Api.Controllers
     [ApiController]
     public class ShoppingCartController : ControllerBase
     {
-        private readonly IShoppingCartRepository _shoppingCart;
-        private readonly IProductRepository _productRepository;
-        public ShoppingCartController(IShoppingCartRepository
-            shoppingCart, IProductRepository productRepository)
+        private readonly IShoppingCartRepository shoppingCartRepository;
+        private readonly IProductRepository productRepository;
+
+        public ShoppingCartController(IShoppingCartRepository shoppingCartRepository,
+                                      IProductRepository productRepository)
         {
-            this._shoppingCart = shoppingCart;
-            this._productRepository = productRepository;
+            this.shoppingCartRepository = shoppingCartRepository;
+            this.productRepository = productRepository;
         }
 
         [HttpGet]
-        [Route("{userId/GetItems}")]
+        [Route("{userId}/GetItems")]
         public async Task<ActionResult<IEnumerable<CartItemDto>>> GetItems(int userId)
         {
             try
             {
-                var cartItems = await _shoppingCart.GetItems(userId);
+                var cartItems = await this.shoppingCartRepository.GetItems(userId);
 
                 if (cartItems == null)
                 {
                     return NoContent();
                 }
 
-                var getProducts = await _productRepository.GetProducts();
+                var products = await this.productRepository.GetProducts();
 
-                if (getProducts == null)
+                if (products == null)
                 {
-                    throw new Exception("Product has not been found");
+                    throw new Exception("No products exist in the system");
                 }
 
-                var cartItemDto = cartItems.ConvertToDto(getProducts);
+                var cartItemsDto = cartItems.ConvertToDto(products);
 
-                return Ok(cartItemDto);
+                return Ok(cartItemsDto);
+
             }
             catch (Exception ex)
             {
-
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+
             }
         }
 
@@ -55,20 +57,17 @@ namespace ShopOnline.Api.Controllers
         {
             try
             {
-                var cartItem = await _shoppingCart.GetItem(id);
-
-                if(cartItem == null)
+                var cartItem = await this.shoppingCartRepository.GetItem(id);
+                if (cartItem == null)
                 {
                     return NotFound();
                 }
+                var product = await productRepository.GetProduct(cartItem.ProductId);
 
-                var product = await _productRepository.GetProduct(cartItem.ProductId);
-
-                if(product == null)
+                if (product == null)
                 {
                     return NotFound();
                 }
-
                 var cartItemDto = cartItem.ConvertToDto(product);
 
                 return Ok(cartItemDto);
@@ -78,5 +77,37 @@ namespace ShopOnline.Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
+
+        [HttpPost]
+        public async Task<ActionResult<CartItemDto>> PostItem([FromBody] CartItemToAddDto cartItemToAddDto)
+        {
+            try
+            {
+                var newCartItem = await this.shoppingCartRepository.AddItem(cartItemToAddDto);
+
+                if (newCartItem == null)
+                {
+                    return NoContent();
+                }
+
+                var product = await productRepository.GetProduct(newCartItem.ProductId);
+
+                if (product == null)
+                {
+                    throw new Exception($"Something went wrong when attempting to retrieve product (productId:({cartItemToAddDto.ProductId})");
+                }
+
+                var newCartItemDto = newCartItem.ConvertToDto(product);
+
+                return CreatedAtAction(nameof(GetItem), new { id = newCartItemDto.Id }, newCartItemDto);
+
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
     }
 }
